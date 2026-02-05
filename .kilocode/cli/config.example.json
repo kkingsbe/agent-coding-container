@@ -1,0 +1,57 @@
+{
+  "version": "1.0.0",
+  "mode": "orchestrator",
+  "telemetry": true,
+  "provider": "default",
+  "providers": [
+    {
+      "id": "default",
+      "provider": "kilocode",
+      "kilocodeToken": "",
+      "kilocodeModel": "z-ai/glm-4.7",
+      "kilocodePosthogApiKey": ""
+    }
+  ],
+  "autoApproval": {
+    "enabled": true,
+    "read": {
+      "enabled": true,
+      "outside": false
+    },
+    "write": {
+      "enabled": true,
+      "outside": true,
+      "protected": false
+    },
+    "browser": {
+      "enabled": false
+    },
+    "retry": {
+      "enabled": false,
+      "delay": 10
+    },
+    "mcp": {
+      "enabled": true
+    },
+    "mode": {
+      "enabled": true
+    },
+    "subtasks": {
+      "enabled": true
+    },
+    "execute": {
+      "enabled": true,
+      "allowed": [],
+      "denied": []
+    },
+    "question": {
+      "enabled": false,
+      "timeout": 60
+    },
+    "todo": {
+      "enabled": true
+    }
+  },
+  "theme": "dark",
+  "customThemes": {}
+}

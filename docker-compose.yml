@@ -1,0 +1,82 @@
+version: '3.8'
+
+# ============================================================================
+# CONFIGURATION OPTIONS
+# ============================================================================
+
+# Project Name Configuration
+# Set COMPOSE_PROJECT_NAME to create unique instance names (required for running multiple instances)
+# Default: agent-coding-container (derived from directory name)
+#
+#   Linux/Mac:
+#     COMPOSE_PROJECT_NAME=my-project docker-compose up
+#
+#   Windows (PowerShell):
+#     $env:COMPOSE_PROJECT_NAME="my-project"; docker-compose up
+#
+#   Windows (CMD):
+#     set COMPOSE_PROJECT_NAME=my-project && docker-compose up
+#
+# Or create a .env file in the same directory with:
+#   COMPOSE_PROJECT_NAME=my-project
+#
+# This is essential for running multiple instances simultaneously without name conflicts.
+# Each instance will have unique container, network, and volume names based on the project name.
+#
+# Example: Running two instances for different projects
+#   Terminal 1: COMPOSE_PROJECT_NAME=project-a docker-compose up
+#   Terminal 2: COMPOSE_PROJECT_NAME=project-b docker-compose up
+
+# Loop Type Configuration
+# Set LOOP_TYPE to 'development' or 'bugfixer' to change the automation loop
+# Default: development
+#
+#   Linux/Mac:
+#     LOOP_TYPE=development docker-compose up
+#     LOOP_TYPE=bugfixer docker-compose up
+#
+#   Windows (PowerShell):
+#     $env:LOOP_TYPE="bugfixer"; docker-compose up
+#
+#   Windows (CMD):
+#     set LOOP_TYPE=bugfixer && docker-compose up
+#
+# Or create a .env file in the same directory with:
+#   LOOP_TYPE=development
+#   LOOP_TYPE=bugfixer
+
+# ============================================================================
+# VOLUME MOUNT CONFIGURATION
+# ============================================================================
+# To mount a custom host directory to the container, set the MOUNT_HOST_DIR
+# environment variable before running docker-compose:
+#
+#   Linux/Mac:
+#     MOUNT_HOST_DIR=/path/to/your/host/directory docker-compose up
+#
+#   Windows (PowerShell):
+#     $env:MOUNT_HOST_DIR="C:\path\to\your\directory"; docker-compose up
+#
+#   Windows (CMD):
+#     set MOUNT_HOST_DIR=C:\path\to\your\directory && docker-compose up
+#
+# Or create a .env file in the same directory with:
+#   MOUNT_HOST_DIR=/path/to/your/host/directory
+#
+# The mounted directory will be accessible at /home/workspace inside the container.
+# To mount the current directory, use: MOUNT_HOST_DIR=$(pwd)  (Linux/Mac)
+# ============================================================================
+
+services:
+  agent_coding_container:
+    build: .
+    # Container name is auto-generated based on COMPOSE_PROJECT_NAME
+    # Example: COMPOSE_PROJECT_NAME=my-app -> container name: my-app_agent_coding_container_1
+    environment:
+      # Loop type: development (default) or bugfixer
+      - LOOP_TYPE=${LOOP_TYPE:-development}
+    volumes:
+      # User-configurable volume mount for workspace/data access
+      # This volume allows the automation scripts to access host directories
+      - ${MOUNT_HOST_DIR:-./workspace}:/home/workspace
+    restart: unless-stopped
