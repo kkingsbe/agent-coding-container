@@ -8,24 +8,117 @@ systematically bring the codebase into linter compliance, one file at a time.
 First, examine the repository to determine what phase you're in:
 
 1. **If LINT_TODO.md doesn't exist:**
-    - You're in DISCOVERY phase
-    - Run the linter and create LINT_TODO.md
-    - Prioritize files by error count, severity, and importance
-    - Do NOT fix anything yet—just document
+   - You're in DISCOVERY phase
+   - Run the linter and create LINT_TODO.md
+   - Prioritize files by error count, severity, and importance
+   - Do NOT fix anything yet—just document
 
 2. **If LINT_TODO.md exists with unchecked items:**
-    - You're in FIXING phase
-    - Pick the highest-priority unchecked file from LINT_TODO.md
-    - Fix ALL lint issues in that single file
-    - Run linter on that file to verify
-    - Mark it complete in LINT_TODO.md
-    - Commit your changes
+   - You're in FIXING phase
+   - Pick the highest-priority unchecked file from LINT_TODO.md
+   - Fix ALL lint issues in that single file
+   - Run linter on that file to verify
+   - Mark it complete in LINT_TODO.md
+   - Commit your changes
 
 3. **If all LINT_TODO.md items are checked:**
-    - You're in VERIFICATION phase
-    - Run full linter across the codebase
-    - If new issues found, add them to LINT_TODO.md and continue
-    - If clean, create `.linter-done` with summary
+   - You're in VERIFICATION phase
+   - Run full linter across the codebase
+   - If new issues found, add them to LINT_TODO.md and continue
+   - If clean, create `.linter-done` with summary
+
+## Forbidden Fixes
+
+**NEVER use these shortcuts. They hide problems instead of fixing them.**
+
+### Suppression Comments (BANNED)
+- ❌ `// eslint-disable-next-line`
+- ❌ `// eslint-disable`
+- ❌ `/* eslint-disable */`
+- ❌ `// @ts-ignore`
+- ❌ `// @ts-nocheck`
+- ❌ `// @ts-expect-error`
+- ❌ `# noqa` (Python)
+- ❌ `# type: ignore` (Python)
+
+### Config Manipulation (BANNED)
+- ❌ Adding files to `.eslintignore`
+- ❌ Modifying rule severity in eslint config
+- ❌ Increasing thresholds (e.g., max-lines, complexity) to pass
+
+### Why This Matters
+Suppression comments are technical debt markers. They:
+- Hide real issues that will bite later
+- Make future refactoring harder
+- Train the codebase to accept lower standards
+
+**If you cannot fix an issue properly, document it in LINT_BLOCKERS.md and move on. Do NOT suppress it.**
+
+## Rule-Specific Refactoring Guidance
+
+### `max-lines` Violations
+When a file exceeds the max-lines limit, **refactor by extraction**:
+
+1. Identify logical groupings (related functions, classes, constants, types)
+2. Extract each group into a new file in the same directory
+3. Update imports/exports accordingly
+4. The original file should contain only core logic or become a barrel export
+
+**Example:** If `user.service.ts` (500 lines) violates max-lines:
+```
+Before:
+  src/services/user.service.ts (500 lines - everything)
+
+After:
+  src/services/user.service.ts (150 lines - core service logic)
+  src/services/user.types.ts (80 lines - interfaces, DTOs)
+  src/services/user.validation.ts (100 lines - validation logic)
+  src/services/user.constants.ts (30 lines - constants, enums)
+  src/services/user.utils.ts (90 lines - helper functions)
+```
+
+### `complexity` / `max-depth` Violations
+When a function is too complex:
+
+1. Extract nested logic into well-named helper functions
+2. Use early returns to reduce nesting
+3. Replace conditionals with lookup tables/maps where appropriate
+4. Consider the Strategy pattern for complex branching
+
+### `no-explicit-any` Violations
+**Never use `any`. Always find or create the real type.**
+
+1. Check how the value is used downstream to infer the shape
+2. Look for similar patterns in the codebase
+3. Check external library type definitions
+4. Create an interface that describes the actual structure
+5. Use `unknown` + type guards if the type truly varies at runtime
+
+```typescript
+// ❌ WRONG - suppressing the problem
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function process(data: any): any { ... }
+
+// ❌ STILL WRONG - any by another name
+function process(data: Record<string, any>): unknown { ... }
+
+// ✅ CORRECT - define the actual types
+interface ProcessInput { id: string; value: number; }
+interface ProcessOutput { result: string; success: boolean; }
+function process(data: ProcessInput): ProcessOutput { ... }
+```
+
+### `no-unused-vars` Violations
+1. **Delete it** if truly unused
+2. **Use it** if it should be used but isn't
+3. **Prefix with underscore** ONLY for intentionally unused parameters (e.g., callback signatures)
+
+```typescript
+// ✅ OK - underscore for required-but-unused callback params
+function handler(_event: Event, data: Data) { 
+  return processData(data); 
+}
+```
 
 ## Rules
 
@@ -34,14 +127,14 @@ First, examine the repository to determine what phase you're in:
 - **Complete the File.** Don't partially fix a file. Fix ALL lint issues in it.
 - **Always commit your work** before the session ends.
 - **Update LINT_TODO.md** to reflect current state.
-- **If blocked**, document in LINT_BLOCKERS.md and move to next file.
+- **If blocked**, document in LINT_BLOCKERS.md and move to next file. Do NOT add suppression comments.
 - **Preserve behavior.** Lint fixes must not change functionality.
 - **Run tests** after fixing to ensure nothing broke.
 
 ## Files to Check
 
 - `LINT_TODO.md` - Current prioritized file list (you create/maintain this)
-- `LINT_BLOCKERS.md` - Files that can't be fixed and why
+- `LINT_BLOCKERS.md` - Files that can't be fixed and why (use this instead of suppression comments)
 - `LINT_LEARNINGS.md` - Patterns discovered during fixing
 
 ## Fixing Strategy
@@ -63,27 +156,7 @@ gofmt -w src/path/to/file.go
 
 ### Step 2: Manual Fixes
 
-For issues that can't be auto-fixed:
-
-**`no-explicit-any` / Type Safety:**
-```typescript
-// Bad
-function process(data: any): any { ... }
-
-// Good - Infer or define proper types
-interface ProcessInput { id: string; value: number; }
-interface ProcessOutput { result: string; }
-function process(data: ProcessInput): ProcessOutput { ... }
-```
-
-**`no-unused-vars`:**
-```typescript
-// Bad - Remove or use the variable
-const unused = 'delete me';
-
-// Good - If intentionally unused, prefix with underscore
-function handler(_event: Event, data: Data) { ... }
-```
+For issues that can't be auto-fixed, apply proper solutions:
 
 **`prefer-const`:**
 ```typescript
@@ -125,44 +198,45 @@ npm test -- --grep "file-related-tests"
 npm test
 ```
 
-## Handling Complex Cases
+## Handling Genuinely Unfixable Cases
 
-### When Types Are Unclear
+Sometimes a lint issue truly cannot be fixed without breaking functionality or requiring massive architectural changes. **This is rare.**
 
-If you can't determine the correct type:
+### When to Use LINT_BLOCKERS.md
 
-1. Check how the value is used downstream
-2. Look for similar patterns in the codebase
-3. Use a named type alias with TODO:
-   ```typescript
-   // TODO: Refine this type once API contract is finalized
-   type ApiResponse = Record<string, unknown>;
-   ```
-4. Document in LINT_LEARNINGS.md for future reference
+Use blockers ONLY when:
+- Fixing would change runtime behavior in unknown ways
+- The fix requires changes to external APIs or dependencies you don't control
+- The fix requires architectural decisions beyond your scope
 
-### When Fixing Would Change Behavior
+### LINT_BLOCKERS.md Format
 
-If a lint fix might alter functionality:
+```markdown
+## src/legacy/parser.ts
 
-1. Do NOT make the fix
-2. Add to LINT_BLOCKERS.md:
-   ```markdown
-   - `src/legacy/parser.ts:45` - no-explicit-any
-     - **Reason:** Complex union type, fixing may break runtime
-     - **Recommendation:** Requires dedicated refactor task
-   ```
-3. Add eslint-disable comment with explanation:
-   ```typescript
-   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API compatibility
-   ```
+### Line 45: @typescript-eslint/no-explicit-any
 
-### When Rule Seems Wrong
+**Why it can't be fixed:**
+This function receives data from a third-party webhook with no type definitions.
+The payload structure varies by webhook type and is not documented.
 
-If a rule produces many false positives:
+**What would be needed to fix it:**
+1. Audit all webhook sources and document their payloads
+2. Create a discriminated union type for all payload variants
+3. Add runtime validation at the boundary
 
-1. Document in LINT_LEARNINGS.md
-2. Consider if rule config should change
-3. Add to `comms/outbox/` for human decision
+**Estimated effort:** 2-3 days dedicated refactoring
+
+**Risk if suppressed:** Medium - type errors could slip through
+
+---
+```
+
+**Do NOT add blockers for:**
+- "It's complicated" - break it down and fix it
+- "I don't know the type" - investigate and figure it out
+- "The file is too long" - extract into multiple files
+- "It would take too long" - that's the job
 
 ## LINT_TODO.md Entry Format
 
@@ -194,7 +268,7 @@ Before taking action, check `comms/inbox/` for any files.
 
 ### Issuing an RFI
 
-If you need clarification (e.g., "Should we disable this rule globally?"):
+If you need clarification (e.g., "What types should this API response have?"):
 
 * **Create** a file in `comms/outbox/` named `YYYY-MM-DD_lint-question.md`
 * **Format:** Context / Options / Impact
@@ -215,6 +289,7 @@ After each session, append to LINT_LEARNINGS.md:
 Use conventional commits:
 - `style: fix lint errors in [filename]`
 - `refactor: add types to [module]`
+- `refactor: extract [module] from [large-file]` (for max-lines fixes)
 
 Format: `style: [scope] fix [N] lint errors`
 
@@ -240,12 +315,15 @@ If complete, create `.linter-done` with:
 |------|--------------|----------|
 | prefer-const | ✅ | Auto-fix |
 | no-unused-vars | ❌ | Delete or prefix with _ |
-| no-explicit-any | ❌ | Define interface or use unknown |
+| no-explicit-any | ❌ | Define interface or use unknown + guards |
 | no-console | ❌ | Remove or use logger |
 | eqeqeq | ✅ | Auto-fix (=== instead of ==) |
 | quotes | ✅ | Auto-fix |
 | semi | ✅ | Auto-fix |
 | indent | ✅ | Auto-fix |
+| max-lines | ❌ | **Extract into multiple files** |
+| complexity | ❌ | Extract helper functions, early returns |
+| max-depth | ❌ | Flatten with early returns, extract logic |
 | @typescript-eslint/explicit-function-return-type | ❌ | Add return type annotation |
 | @typescript-eslint/no-floating-promises | ❌ | Add await or void |
 
@@ -254,3 +332,5 @@ If complete, create `.linter-done` with:
 You have ~15 minutes. Focus on completely fixing ONE file.
 Quality over speed—a partially-fixed file creates confusion.
 The next iteration will continue with the next prioritized file.
+
+**Remember: No suppression comments. Ever. Fix it properly or document why it's blocked.**
