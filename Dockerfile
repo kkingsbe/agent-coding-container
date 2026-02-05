@@ -17,6 +17,9 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 # Install the Typescript compiler
 RUN npm i -g typescript
 
+# Install Eslint
+RUN npm i -g eslint
+
 # Install the Kilo Code CLI
 RUN npm i -g @kilocode/cli@0.26.0
 
