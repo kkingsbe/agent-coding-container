@@ -15,11 +15,14 @@ First, examine the repository to determine what phase you're in:
 
 2. **If LINT_TODO.md exists with unchecked items:**
    - You're in FIXING phase
-   - Pick the highest-priority unchecked file from LINT_TODO.md
-   - Fix ALL lint issues in that single file
-   - Run linter on that file to verify
-   - Mark it complete in LINT_TODO.md
+   - Pick the highest-priority unchecked item from LINT_TODO.md
+   - **Check if the item has sub-phases:**
+      - **If it has phases:** Find the first unchecked phase and complete ONLY that phase
+      - **If no phases:** Assess scope (see below) — create phases if needed, or fix directly
+   - Run linter to verify your changes
+   - Mark the item OR phase complete in LINT_TODO.md
    - Commit your changes
+   - **STOP** — do not continue to the next item/phase
 
 3. **If all LINT_TODO.md items are checked:**
    - You're in VERIFICATION phase
@@ -120,13 +123,91 @@ function handler(_event: Event, data: Data) {
 }
 ```
 
+## Scope Assessment (REQUIRED before any fix)
+
+Before making ANY changes, you MUST assess the scope of the fix.
+
+### Step 1: Estimate the Work
+
+Ask yourself:
+1. **Lines to change:** How many lines will be modified/added?
+2. **Files to touch:** How many files will be created or modified?
+3. **Complexity:** Is this auto-fixable, manual edits, or a refactor?
+
+### Step 2: Classify the Fix
+
+| Classification | Lines Changed | Files Touched | Action |
+|----------------|---------------|---------------|--------|
+| **Simple** | < 50 | 1 | Fix it now |
+| **Medium** | 50-100 | 1-2 | Fix it now |
+| **Large** | > 100 | > 2 | Break into phases first |
+
+### Step 3: If Large → Create Phases BEFORE Fixing
+
+If the fix is **Large**, do NOT start coding. Instead:
+
+1. Break the work into phases in LINT_TODO.md
+2. Each phase should be a single atomic commit
+3. Complete ONLY the first unchecked phase this session
+
+**Example: Breaking down a max-lines violation**
+
+```markdown
+- [ ] `src/services/user.service.ts` - max-lines (500 lines → needs extraction)
+  - [ ] Phase 1: Extract interfaces/types → `user.types.ts`
+  - [ ] Phase 2: Extract validation logic → `user.validation.ts`
+  - [ ] Phase 3: Extract helper utilities → `user.utils.ts`
+  - [ ] Phase 4: Verify file is under limit, run tests
+```
+
+### Step 4: Working with Phased Tasks
+
+**If you encounter a task that already has phases:**
+- Find the first unchecked phase
+- Complete ONLY that phase
+- Commit with a message describing the phase
+- Check off that phase
+- STOP - do not continue to the next phase
+
+**Example session with phases:**
+
+```
+1. Read LINT_TODO.md, find:
+   - [ ] `user.service.ts` - max-lines
+     - [x] Phase 1: Extract types ✅
+     - [ ] Phase 2: Extract validation  ← YOU ARE HERE
+     - [ ] Phase 3: Extract utils
+     
+2. Complete Phase 2 only:
+   - Create user.validation.ts
+   - Move validation functions
+   - Update imports in user.service.ts
+   - Commit: "refactor: extract validation from user.service"
+   
+3. Update LINT_TODO.md:
+   - [x] Phase 2: Extract validation ✅
+   
+4. STOP - next session handles Phase 3
+```
+
+## Session Scope Limits
+
+**Hard limits per session:**
+- Maximum ~150 lines modified/added total
+- Maximum 3 files touched (including the target file)
+- Maximum 2 new files created
+- Exactly ONE commit
+
+If you find yourself exceeding these limits, STOP and reassess. You likely need to break the work into phases.
+
 ## Rules
 
-- **STRICT: Single File Enforcement.** Fix exactly ONE file per session.
-- **Session Termination:** Once you have committed fixes for a file and checked it off in LINT_TODO.md, you MUST STOP.
-- **Complete the File.** Don't partially fix a file. Fix ALL lint issues in it.
+- **STRICT: One Unit of Work.** Complete exactly ONE file OR ONE phase per session.
+- **Session Termination:** Once you commit and check off your item/phase in LINT_TODO.md, you MUST STOP.
+- **Phases are Atomic.** If a task has phases, complete only ONE phase per session.
+- **Assess Before Acting.** Always run scope assessment before making changes.
 - **Always commit your work** before the session ends.
-- **Update LINT_TODO.md** to reflect current state.
+- **Update LINT_TODO.md** to reflect current state (check off completed items/phases).
 - **If blocked**, document in LINT_BLOCKERS.md and move to next file. Do NOT add suppression comments.
 - **Preserve behavior.** Lint fixes must not change functionality.
 - **Run tests** after fixing to ensure nothing broke.
@@ -329,8 +410,13 @@ If complete, create `.linter-done` with:
 
 ## Important
 
-You have ~15 minutes. Focus on completely fixing ONE file.
-Quality over speed—a partially-fixed file creates confusion.
-The next iteration will continue with the next prioritized file.
+You have ~15 minutes. Focus on completing ONE unit of work:
+- ONE simple/medium file fix, OR
+- ONE phase of a larger refactor
+
+**If a task has phases, complete only the first unchecked phase and STOP.**
+
+Quality over quantity — a clean, atomic commit is better than a sprawling half-finished refactor.
+The next iteration will continue with the next item or phase.
 
 **Remember: No suppression comments. Ever. Fix it properly or document why it's blocked.**
