@@ -4,7 +4,7 @@ const path = require('path');
 
 // Configuration
 const INTERVAL = 0;//(process.argv[2] || 600) * 1000;
-const LOOP_TYPE = process.argv[2] || 'development'; // 'development' or 'bugfixer'
+const LOOP_TYPE = process.argv[2] || 'development'; // 'development', 'bugfixer', or 'linter'
 
 // Development loop prompts
 const PROMPT_PATH = path.join(__dirname, 'prompts/PROMPT.md');
@@ -14,6 +14,11 @@ const ARCHITECT_PATH = path.join(__dirname, 'prompts/ARCHITECT.md');
 // Bugfixer loop prompts
 const BUGFIXER_PATH = path.join(__dirname, 'prompts/BUGFIXER.md');
 const BUGFIXER_BUGCHECK_PATH = path.join(__dirname, 'prompts/BUGFIXER_BUGCHECK.md');
+
+// Linter loop prompts
+const LINTER_PATH = path.join(__dirname, 'prompts/LINTER.md');
+const LINTER_SCAN_PATH = path.join(__dirname, 'prompts/LINTER_SCAN.md');
+const LINTER_PRIORITIZE_PATH = path.join(__dirname, 'prompts/LINTER_PRIORITIZE.md');
 
 const DONE_FILE = '.done';
 
@@ -106,9 +111,21 @@ function runBugfixerBugcheck() {
     return runKiloWithPrompt(BUGFIXER_BUGCHECK_PATH, 'BUGFIXER_BUGCHECK');
 }
 
+function runLinter() {
+    return runKiloWithPrompt(LINTER_PATH, 'LINTER');
+}
+
+function runLinterScan() {
+    return runKiloWithPrompt(LINTER_SCAN_PATH, 'LINTER_SCAN');
+}
+
+function runLinterPrioritize() {
+    return runKiloWithPrompt(LINTER_PRIORITIZE_PATH, 'LINTER_PRIORITIZE');
+}
+
 async function main() {
     // 0. Validate loop type
-    const validLoopTypes = ['development', 'bugfixer'];
+    const validLoopTypes = ['development', 'bugfixer', 'linter'];
     if (!validLoopTypes.includes(LOOP_TYPE)) {
         console.error(`❌ Error: Invalid loop type '${LOOP_TYPE}'. Valid options: ${validLoopTypes.join(', ')}`);
         process.exit(1);
@@ -121,8 +138,10 @@ async function main() {
         requiredPrompts = [PROMPT_PATH, JANITOR_PATH, ARCHITECT_PATH];
     } else if (LOOP_TYPE === 'bugfixer') {
         requiredPrompts = [BUGFIXER_PATH, BUGFIXER_BUGCHECK_PATH];
+    } else if (LOOP_TYPE === 'linter') {
+        requiredPrompts = [LINTER_PATH, LINTER_SCAN_PATH, LINTER_PRIORITIZE_PATH];
     }
-    
+
     for (const promptPath of requiredPrompts) {
         if (!fs.existsSync(promptPath)) {
             console.error(`❌ Error: Prompt file not found at ${promptPath}`);
@@ -173,6 +192,22 @@ async function main() {
             }
             // Always run BUGFIXER.md (runs AFTER BUGCHECK on 4th iteration)
             promptQueue.push({ name: 'BUGFIXER', fn: runBugfixer });
+        } else if (LOOP_TYPE === 'linter') {
+            // Linter loop: LINTER + LINTER_SCAN (every 4) + LINTER_PRIORITIZE (every 8)
+            // Always run LINTER.md - the main fixing loop
+            promptQueue.push({ name: 'LINTER', fn: runLinter });
+
+            // Run LINTER_SCAN every 4 iterations to discover new issues
+            if (iteration % 4 === 0) {
+                promptQueue.push({ name: 'LINTER_SCAN', fn: runLinterScan });
+                console.log(`📋 Queueing LINTER_SCAN.md (iteration ${iteration} is divisible by 4)`);
+            }
+
+            // Run LINTER_PRIORITIZE every 8 iterations to re-organize the queue
+            if (iteration % 8 === 0) {
+                promptQueue.push({ name: 'LINTER_PRIORITIZE', fn: runLinterPrioritize });
+                console.log(`📋 Queueing LINTER_PRIORITIZE.md (iteration ${iteration} is divisible by 8)`);
+            }
         }
 
         // Execute prompts sequentially (not in parallel)
@@ -189,16 +224,27 @@ async function main() {
                     console.log("✅ Project marked complete!");
                     process.exit(0);
                 }
+                // Check for loop-specific done files
+                const linterDonePath = path.join(WORKSPACE_PATH, '.linter-done');
+                const bugfixerDonePath = path.join(WORKSPACE_PATH, '.bugfixer-done');
+                if (LOOP_TYPE === 'linter' && fs.existsSync(linterDonePath)) {
+                    console.log("✅ Linter compliance complete!");
+                    process.exit(0);
+                }
+                if (LOOP_TYPE === 'bugfixer' && fs.existsSync(bugfixerDonePath)) {
+                    console.log("✅ Bug fixing complete!");
+                    process.exit(0);
+                }
             } else {
                 console.log(`⚠️ ${prompt.name} exited with code ${exitCode}, continuing...`);
             }
         }
 
         console.log(`\n${new Date().toLocaleString()}: Iteration ${iteration} complete. Sleeping ${INTERVAL / 1000}s...`);
-        
+
         // Save state before incrementing
         saveState(iteration);
-        
+
         await new Promise(resolve => setTimeout(resolve, INTERVAL));
 
         // Increment iteration counter
