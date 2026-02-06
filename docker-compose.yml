@@ -100,5 +100,5 @@ services:
       # Git worktree support: mount main repo's .git directory at the same path
       # This allows git operations to work when MOUNT_HOST_DIR is a worktree
       # Only add this mount if MAIN_REPO_GIT_DIR is set (handled by bugfix.sh)
-      - ${MAIN_REPO_GIT_DIR:-./.git-placeholder}:${MAIN_REPO_GIT_DIR:-./.git-placeholder}
+      - ${MAIN_REPO_GIT_DIR:-./.git-placeholder}:/home/.git-placeholder
     restart: unless-stopped

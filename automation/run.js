@@ -7,23 +7,55 @@ const INTERVAL = 0;//(process.argv[2] || 600) * 1000;
 const LOOP_TYPE = process.argv[2] || 'development'; // 'development', 'bugfixer', or 'linter'
 
 // Development loop prompts
-const PROMPT_PATH = path.join(__dirname, 'prompts/PROMPT.md');
-const JANITOR_PATH = path.join(__dirname, 'prompts/JANITOR.md');
-const ARCHITECT_PATH = path.join(__dirname, 'prompts/ARCHITECT.md');
+const PROMPT_PATH = path.join(__dirname, 'prompts/development/PROMPT.md');
+const JANITOR_PATH = path.join(__dirname, 'prompts/development/JANITOR.md');
+const ARCHITECT_PATH = path.join(__dirname, 'prompts/development/ARCHITECT.md');
 
 // Bugfixer loop prompts
-const BUGFIXER_PATH = path.join(__dirname, 'prompts/BUGFIXER.md');
-const BUGFIXER_BUGCHECK_PATH = path.join(__dirname, 'prompts/BUGFIXER_BUGCHECK.md');
+const BUGFIXER_PATH = path.join(__dirname, 'prompts/bugfixer/BUGFIXER.md');
+const BUGFIXER_BUGCHECK_PATH = path.join(__dirname, 'prompts/bugfixer/BUGFIXER_BUGCHECK.md');
 
 // Linter loop prompts
-const LINTER_PATH = path.join(__dirname, 'prompts/LINTER.md');
-const LINTER_SCAN_PATH = path.join(__dirname, 'prompts/LINTER_SCAN.md');
-const LINTER_PRIORITIZE_PATH = path.join(__dirname, 'prompts/LINTER_PRIORITIZE.md');
+const LINTER_PATH = path.join(__dirname, 'prompts/linter/LINTER.md');
+const LINTER_SCAN_PATH = path.join(__dirname, 'prompts/linter/LINTER_SCAN.md');
+const LINTER_PRIORITIZE_PATH = path.join(__dirname, 'prompts/linter/LINTER_PRIORITIZE.md');
 
 const DONE_FILE = '.done';
 
 const WORKSPACE_PATH = path.resolve(__dirname, '../workspace');
 const STATE_FILE = path.join(WORKSPACE_PATH, `.state_${LOOP_TYPE}.json`);
+
+// Continuation markers - prompts that support idempotent resumption
+const CONTINUATION_CONFIG = {
+    'ARCHITECT': {
+        marker: '.architect_in_progress',
+        stateFile: 'ARCHITECT_STATE.md'
+    },
+    'LINTER_SCAN': {
+        marker: '.linter_scan_in_progress',
+        stateFile: 'LINTER_SCAN_STATE.md'
+    },
+    'LINTER_PRIORITIZE': {
+        marker: '.linter_prioritize_in_progress',
+        stateFile: 'LINTER_PRIORITIZE_STATE.md'
+    },
+    'BUGFIXER_BUGCHECK': {
+        marker: '.bugfixer_bugcheck_in_progress',
+        stateFile: 'BUGFIXER_BUGCHECK_STATE.md'
+    }
+};
+
+// Prompt runner mapping
+const PROMPT_RUNNERS = {
+    'PROMPT': () => runKiloWithPrompt(PROMPT_PATH, 'PROMPT'),
+    'JANITOR': () => runKiloWithPrompt(JANITOR_PATH, 'JANITOR'),
+    'ARCHITECT': () => runKiloWithPrompt(ARCHITECT_PATH, 'ARCHITECT'),
+    'BUGFIXER': () => runKiloWithPrompt(BUGFIXER_PATH, 'BUGFIXER'),
+    'BUGFIXER_BUGCHECK': () => runKiloWithPrompt(BUGFIXER_BUGCHECK_PATH, 'BUGFIXER_BUGCHECK'),
+    'LINTER': () => runKiloWithPrompt(LINTER_PATH, 'LINTER'),
+    'LINTER_SCAN': () => runKiloWithPrompt(LINTER_SCAN_PATH, 'LINTER_SCAN'),
+    'LINTER_PRIORITIZE': () => runKiloWithPrompt(LINTER_PRIORITIZE_PATH, 'LINTER_PRIORITIZE')
+};
 
 // State management functions
 function loadState() {
@@ -60,6 +92,34 @@ function saveState(iteration) {
     }
 }
 
+// Continuation detection - check for incomplete prompts from previous runs
+function checkForContinuation() {
+    for (const [promptName, config] of Object.entries(CONTINUATION_CONFIG)) {
+        const markerPath = path.join(WORKSPACE_PATH, config.marker);
+        if (fs.existsSync(markerPath)) {
+            const stateFilePath = path.join(WORKSPACE_PATH, config.stateFile);
+            const hasStateFile = fs.existsSync(stateFilePath);
+            console.log(`🔄 Found incomplete ${promptName} session`);
+            console.log(`   - Marker: ${config.marker}`);
+            console.log(`   - State file exists: ${hasStateFile}`);
+            if (hasStateFile) {
+                try {
+                    const stateContent = fs.readFileSync(stateFilePath, 'utf8');
+                    // Extract status line if present
+                    const statusMatch = stateContent.match(/Status:\s*(\w+)/i);
+                    if (statusMatch) {
+                        console.log(`   - Status: ${statusMatch[1]}`);
+                    }
+                } catch (e) {
+                    // Ignore read errors
+                }
+            }
+            return promptName;
+        }
+    }
+    return null;
+}
+
 // Reusable function to run kilocode with any prompt
 function runKiloWithPrompt(promptPath, promptName) {
     console.log(`${new Date().toLocaleString()}: Starting ${promptName}...`);
@@ -89,38 +149,6 @@ function runKiloWithPrompt(promptPath, promptName) {
 
     console.log(`${new Date().toLocaleString()}: ${promptName} completed with exit code ${result.status}`);
     return result.status;
-}
-
-function runKilo() {
-    return runKiloWithPrompt(PROMPT_PATH, 'PROMPT');
-}
-
-function runJanitor() {
-    return runKiloWithPrompt(JANITOR_PATH, 'JANITOR');
-}
-
-function runArchitect() {
-    return runKiloWithPrompt(ARCHITECT_PATH, 'ARCHITECT');
-}
-
-function runBugfixer() {
-    return runKiloWithPrompt(BUGFIXER_PATH, 'BUGFIXER');
-}
-
-function runBugfixerBugcheck() {
-    return runKiloWithPrompt(BUGFIXER_BUGCHECK_PATH, 'BUGFIXER_BUGCHECK');
-}
-
-function runLinter() {
-    return runKiloWithPrompt(LINTER_PATH, 'LINTER');
-}
-
-function runLinterScan() {
-    return runKiloWithPrompt(LINTER_SCAN_PATH, 'LINTER_SCAN');
-}
-
-function runLinterPrioritize() {
-    return runKiloWithPrompt(LINTER_PRIORITIZE_PATH, 'LINTER_PRIORITIZE');
 }
 
 async function main() {
@@ -168,53 +196,70 @@ async function main() {
         // Build queue of prompts to run for this iteration
         const promptQueue = [];
 
+        // FIRST: Check for any incomplete prompts that need continuation
+        const continuationPrompt = checkForContinuation();
+        
+        if (continuationPrompt) {
+            // Priority: Resume incomplete work before normal scheduling
+            console.log(`📋 Prioritizing continuation of ${continuationPrompt}`);
+            promptQueue.push({ 
+                name: continuationPrompt, 
+                fn: PROMPT_RUNNERS[continuationPrompt],
+                isContinuation: true 
+            });
+        }
+
+        // THEN: Add normally scheduled prompts (if not already queued for continuation)
         if (LOOP_TYPE === 'development') {
             // Development loop: PROMPT + JANITOR (every 4) + ARCHITECT (every 8)
-            promptQueue.push({ name: 'PROMPT', fn: runKilo });
+            promptQueue.push({ name: 'PROMPT', fn: PROMPT_RUNNERS['PROMPT'] });
 
             // Check for JANITOR.md (every 4 iterations)
             if (iteration % 4 === 0) {
-                promptQueue.push({ name: 'JANITOR', fn: runJanitor });
+                promptQueue.push({ name: 'JANITOR', fn: PROMPT_RUNNERS['JANITOR'] });
                 console.log(`📋 Queueing JANITOR.md (iteration ${iteration} is divisible by 4)`);
             }
 
-            // Check for ARCHITECT.md (every 8 iterations)
-            if (iteration % 8 === 0) {
-                promptQueue.push({ name: 'ARCHITECT', fn: runArchitect });
+            // Check for ARCHITECT.md (every 8 iterations) - skip if already in queue from continuation
+            if (iteration % 8 === 0 && continuationPrompt !== 'ARCHITECT') {
+                promptQueue.push({ name: 'ARCHITECT', fn: PROMPT_RUNNERS['ARCHITECT'] });
                 console.log(`📋 Queueing ARCHITECT.md (iteration ${iteration} is divisible by 8)`);
             }
         } else if (LOOP_TYPE === 'bugfixer') {
             // Bugfixer loop: BUGFIXER_BUGCHECK (every 4) + BUGFIXER
-            // Note: BUGCHECK runs FIRST on iteration 4, 8, 12, etc.
-            if (iteration % 4 === 0) {
-                promptQueue.push({ name: 'BUGFIXER_BUGCHECK', fn: runBugfixerBugcheck });
+            if (iteration % 4 === 0 && continuationPrompt !== 'BUGFIXER_BUGCHECK') {
+                promptQueue.push({ name: 'BUGFIXER_BUGCHECK', fn: PROMPT_RUNNERS['BUGFIXER_BUGCHECK'] });
                 console.log(`📋 Queueing BUGFIXER_BUGCHECK.md (iteration ${iteration} is divisible by 4)`);
             }
-            // Always run BUGFIXER.md (runs AFTER BUGCHECK on 4th iteration)
-            promptQueue.push({ name: 'BUGFIXER', fn: runBugfixer });
+            promptQueue.push({ name: 'BUGFIXER', fn: PROMPT_RUNNERS['BUGFIXER'] });
         } else if (LOOP_TYPE === 'linter') {
             // Linter loop: LINTER + LINTER_SCAN (every 4) + LINTER_PRIORITIZE (every 8)
-            // Always run LINTER.md - the main fixing loop
-            promptQueue.push({ name: 'LINTER', fn: runLinter });
+            promptQueue.push({ name: 'LINTER', fn: PROMPT_RUNNERS['LINTER'] });
 
-            // Run LINTER_SCAN every 4 iterations to discover new issues
-            if (iteration % 4 === 0) {
-                promptQueue.push({ name: 'LINTER_SCAN', fn: runLinterScan });
+            if (iteration % 4 === 0 && continuationPrompt !== 'LINTER_SCAN') {
+                promptQueue.push({ name: 'LINTER_SCAN', fn: PROMPT_RUNNERS['LINTER_SCAN'] });
                 console.log(`📋 Queueing LINTER_SCAN.md (iteration ${iteration} is divisible by 4)`);
             }
 
-            // Run LINTER_PRIORITIZE every 8 iterations to re-organize the queue
-            if (iteration % 8 === 0) {
-                promptQueue.push({ name: 'LINTER_PRIORITIZE', fn: runLinterPrioritize });
+            if (iteration % 8 === 0 && continuationPrompt !== 'LINTER_PRIORITIZE') {
+                promptQueue.push({ name: 'LINTER_PRIORITIZE', fn: PROMPT_RUNNERS['LINTER_PRIORITIZE'] });
                 console.log(`📋 Queueing LINTER_PRIORITIZE.md (iteration ${iteration} is divisible by 8)`);
             }
         }
 
         // Execute prompts sequentially (not in parallel)
-        console.log(`📝 Execution order: ${promptQueue.map(p => p.name).join(' -> ')}`);
+        const queueDescription = promptQueue.map(p => 
+            p.isContinuation ? `${p.name}(cont)` : p.name
+        ).join(' -> ');
+        console.log(`📝 Execution order: ${queueDescription}`);
 
         for (const prompt of promptQueue) {
-            console.log(`\n▶️ Running ${prompt.name}...`);
+            if (prompt.isContinuation) {
+                console.log(`\n🔄 Resuming ${prompt.name} (continuation from previous session)...`);
+            } else {
+                console.log(`\n▶️ Running ${prompt.name}...`);
+            }
+            
             const exitCode = prompt.fn();
 
             if (exitCode === 0) {
