@@ -1,0 +1,46 @@
+[package]
+name = "automation-agents"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Agent entry points for the gastown project"
+categories = ["development-tools", "command-line-utilities"]
+keywords = ["automation", "agents", "cli"]
+
+[[bin]]
+name = "architect"
+path = "src/bin/architect.rs"
+
+[[bin]]
+name = "janitor"
+path = "src/bin/janitor.rs"
+
+[[bin]]
+name = "prompt"
+path = "src/bin/prompt.rs"
+
+[[bin]]
+name = "code-review"
+path = "src/bin/code_review.rs"
+
+[dependencies]
+automation-common = { path = "../common" }
+automation-state = { path = "../state" }
+automation-workspace = { path = "../workspace" }
+automation-executor = { path = "../executor" }
+automation-scheduler = { path = "../scheduler" }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+clap = { workspace = true }
+chrono = { workspace = true }
+walkdir = "2"
+
+[dev-dependencies]
+tempfile = "3"

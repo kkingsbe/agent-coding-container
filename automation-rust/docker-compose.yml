@@ -1,0 +1,155 @@
+version: '3.9'
+
+services:
+  # Architect Agent - Long-running planning and architecture agent
+  architect:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: automation-rust:latest
+    container_name: ${CONTAINER_PREFIX:-}automation-architect
+    command: ["/usr/local/bin/architect", "--workspace", "/workspace", "--state", "/state", "--interval", "40", "--timeout", "30"]
+    volumes:
+      # Mount the workspace directory
+      - workspace-data:/workspace
+      # Mount the state directory
+      - state-data:/state
+      # Mount the prompt directories for output
+      - prompts-architect:/workspace/prompts-architect
+    environment:
+      - RUST_LOG=info
+      - RUST_BACKTRACE=1
+      - ARCHITECT_INTERVAL=40
+      - ARCHITECT_TIMEOUT=30
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "architect"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      start_period: 10s
+    networks:
+      - automation-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Janitor Agent - Cleanup and maintenance agent
+  janitor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: automation-rust:latest
+    container_name: ${CONTAINER_PREFIX:-}automation-janitor
+    command: ["/usr/local/bin/janitor", "--workspace", "/workspace", "--state", "/state", "--interval", "20", "--timeout", "15"]
+    volumes:
+      # Mount the workspace directory (shared with other agents)
+      - workspace-data:/workspace
+      # Mount the state directory (shared with other agents)
+      - state-data:/state
+      # Mount the prompt directories for output
+      - prompts-janitor:/workspace/prompts-janitor
+    environment:
+      - RUST_LOG=info
+      - RUST_BACKTRACE=1
+      - JANITOR_INTERVAL=20
+      - JANITOR_TIMEOUT=15
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "janitor"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      start_period: 10s
+    networks:
+      - automation-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Prompt Agent - Quick task execution agent
+  prompt:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: automation-rust:latest
+    container_name: ${CONTAINER_PREFIX:-}automation-prompt
+    command: ["/usr/local/bin/prompt", "--workspace", "/workspace", "--state", "/state", "--interval", "5", "--timeout", "3"]
+    volumes:
+      # Mount the workspace directory (shared with other agents)
+      - workspace-data:/workspace
+      # Mount the state directory (shared with other agents)
+      - state-data:/state
+      # Mount the prompt directories for output
+      - prompts-prompt:/workspace/prompts-prompt
+    environment:
+      - RUST_LOG=info
+      - RUST_BACKTRACE=1
+      - PROMPT_INTERVAL=5
+      - PROMPT_TIMEOUT=3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "prompt"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      start_period: 10s
+    networks:
+      - automation-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# Named volumes for persistent data
+volumes:
+  workspace-data:
+    driver: local
+    name: automation-workspace
+  state-data:
+    driver: local
+    name: automation-state
+  prompts-architect:
+    driver: local
+    name: automation-prompts-architect
+  prompts-janitor:
+    driver: local
+    name: automation-prompts-janitor
+  prompts-prompt:
+    driver: local
+    name: automation-prompts-prompt
+
+# Network configuration for inter-container communication
+networks:
+  automation-network:
+    driver: bridge
+    name: automation-network

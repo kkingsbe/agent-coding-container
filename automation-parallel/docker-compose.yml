@@ -1,0 +1,104 @@
+services:
+  agent_prompt:
+    container_name: ${CONTAINER_PREFIX:-}agent_prompt
+    build: .
+    command: node run-prompt.js --workspace /workspace --state /workspace/.state --interval ${PROMPT_INTERVAL:-300000} --timeout ${PROMPT_TIMEOUT:-900000} --immediate
+    volumes:
+      - ${MOUNT_HOST_DIR}:/workspace
+      - workspace-state:/workspace/.state
+      - logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - automation-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "console.log('healthy')"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # NVIDIA GPU support (Docker Compose v2 syntax)
+    # Remove the entire 'deploy' section to disable GPU support
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+
+  agent_janitor:
+    container_name: ${CONTAINER_PREFIX:-}agent_janitor
+    build: .
+    command: node run-janitor.js --workspace /workspace --state /workspace/.state --interval ${JANITOR_INTERVAL:-1200000} --timeout ${JANITOR_TIMEOUT:-900000} --immediate
+    volumes:
+      - ${MOUNT_HOST_DIR}:/workspace
+      - workspace-state:/workspace/.state
+      - logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - automation-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "console.log('healthy')"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # NVIDIA GPU support (Docker Compose v2 syntax)
+    # Remove the entire 'deploy' section to disable GPU support
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+
+  agent_architect:
+    container_name: ${CONTAINER_PREFIX:-}agent_architect
+    build: .
+    command: node run-architect.js --workspace /workspace --state /workspace/.state --interval ${ARCHITECT_INTERVAL:-2400000} --timeout ${ARCHITECT_TIMEOUT:-900000} --immediate
+    volumes:
+      - ${MOUNT_HOST_DIR}:/workspace
+      - workspace-state:/workspace/.state
+      - logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - automation-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "console.log('healthy')"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # NVIDIA GPU support (Docker Compose v2 syntax)
+    # Remove the entire 'deploy' section to disable GPU support
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+
+networks:
+  automation-network:
+    driver: bridge
+
+volumes:
+  workspace-state:
+  logs:

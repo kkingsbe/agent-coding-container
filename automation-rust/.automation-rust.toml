@@ -1,0 +1,339 @@
+# ============================================================================
+# Gastown Configuration File
+# ============================================================================
+#
+# This is the configuration file for the gastown system. It defines
+# workspace settings, logging options, and agent-specific configurations.
+#
+# All sections and fields are optional. If omitted, the system will use the
+# documented default values.
+#
+# Location: Place this file at the root of your workspace directory.
+# File name: .automation-rust.toml
+#
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Workspace Configuration
+# ----------------------------------------------------------------------------
+#
+# Defines the workspace paths where agents operate and store state.
+#
+[workspace]
+
+# Path to the workspace directory
+# - Default: "."
+# - Can be an absolute path (e.g., "/home/user/project")
+# - Can be a relative path (e.g., "." or "./my-project")
+# - Used as the base directory for agent operations
+path = "."
+
+# Path to the state directory for storing agent state and locks
+# - Default: ".state"
+# - Relative to the workspace path
+# - Agent locks and state files are stored here
+# - Should be a directory that the agents can read/write
+state_path = ".state"
+
+# ----------------------------------------------------------------------------
+# Logging Configuration
+# ----------------------------------------------------------------------------
+#
+# Controls the logging behavior for all agents.
+#
+[logging]
+
+# Log level controls the verbosity of log messages
+# - Default: "info"
+# - Options: "trace", "debug", "info", "warn", "error"
+# - Use "debug" or "trace" for troubleshooting
+# - Use "error" for minimal output in production
+level = "info"
+
+# Log format determines how log messages are displayed
+# - Default: "pretty"
+# - Options: "pretty" (human-readable with colors), "json" (structured logs)
+# - "pretty" is recommended for development and local testing
+# - "json" is recommended for production with log aggregation systems
+format = "pretty"
+
+# Enable or disable colored output
+# - Default: true
+# - When true: logs use ANSI color codes for better readability
+# - When false: plain text output (useful for file logging)
+# - Colors are automatically disabled when not writing to a terminal
+colors = true
+
+# ----------------------------------------------------------------------------
+# Agent Configuration - Architect
+# ----------------------------------------------------------------------------
+#
+# The architect agent is responsible for planning, designing, and creating
+# system architecture. It typically runs less frequently but requires more time.
+#
+[agents.architect]
+
+# How often (in minutes) the architect agent should run automatically
+# - Default: 40
+# - Higher values reduce agent frequency (good for large projects)
+# - Lower values increase agent frequency (good for active development)
+# - Set to 0 to disable automatic scheduling
+interval_minutes = 40
+
+# Maximum execution time for the architect agent (in minutes)
+# - Default: 30
+# - Prevents the agent from running indefinitely
+# - Should be less than interval_minutes to avoid overlap
+# - Adjust based on typical architect task complexity
+timeout_minutes = 30
+
+# Whether to run the architect agent immediately on startup
+# - Default: false
+# - When true: agent runs once immediately before scheduling
+# - Useful for initial project setup or when you want immediate action
+# - When false: agent waits for the first interval to pass
+immediate = false
+
+# Path to the prompt template file for the architect agent
+# - Default: "prompts-architect/ARCHITECT.md"
+# - Relative to the workspace path
+# - Contains the instructions and context for the architect agent
+# - You can customize this file to change agent behavior
+prompt_template = "prompts-architect/ARCHITECT.md"
+
+# Lock configuration for the architect agent
+# Prevents multiple instances of the same agent from running concurrently
+[agents.architect.lock]
+
+# Maximum number of retry attempts when acquiring a lock
+# - Default: 3
+# - How many times to retry if the lock is held by another process
+# - Higher values give more chances to acquire the lock in busy systems
+# - Each retry waits for the timeout_seconds duration
+max_retries = 3
+
+# Timeout (in seconds) for each lock acquisition attempt
+# - Default: 30
+# - How long to wait for the lock before retrying
+# - Should be long enough for normal operations to complete
+# - Too long may cause delays, too short may cause unnecessary retries
+timeout_seconds = 30
+
+# ----------------------------------------------------------------------------
+# Agent Configuration - Janitor
+# ----------------------------------------------------------------------------
+#
+# The janitor agent is responsible for cleanup, maintenance, and keeping
+# the workspace organized. It runs more frequently than the architect.
+#
+[agents.janitor]
+
+# How often (in minutes) the janitor agent should run automatically
+# - Default: 20
+# - Higher values reduce cleanup frequency (good for slow-changing projects)
+# - Lower values increase cleanup frequency (good for active development)
+# - Set to 0 to disable automatic scheduling
+interval_minutes = 20
+
+# Maximum execution time for the janitor agent (in minutes)
+# - Default: 15
+# - Prevents the agent from running indefinitely
+# - Should be less than interval_minutes to avoid overlap
+# - Adjust based on typical cleanup task complexity
+timeout_minutes = 15
+
+# Whether to run the janitor agent immediately on startup
+# - Default: false
+# - When true: agent runs once immediately before scheduling
+# - Useful for cleaning up any accumulated issues
+# - When false: agent waits for the first interval to pass
+immediate = false
+
+# Path to the prompt template file for the janitor agent
+# - Default: "prompts-janitor/JANITOR.md"
+# - Relative to the workspace path
+# - Contains the instructions and context for the janitor agent
+# - You can customize this file to change agent behavior
+prompt_template = "prompts-janitor/JANITOR.md"
+
+# Lock configuration for the janitor agent
+# Prevents multiple instances of the same agent from running concurrently
+[agents.janitor.lock]
+
+# Maximum number of retry attempts when acquiring a lock
+# - Default: 3
+# - How many times to retry if the lock is held by another process
+# - Higher values give more chances to acquire the lock in busy systems
+# - Each retry waits for the timeout_seconds duration
+max_retries = 3
+
+# Timeout (in seconds) for each lock acquisition attempt
+# - Default: 30
+# - How long to wait for the lock before retrying
+# - Should be long enough for normal operations to complete
+# - Too long may cause delays, too short may cause unnecessary retries
+timeout_seconds = 30
+
+# ----------------------------------------------------------------------------
+# Agent Configuration - Prompt
+# ----------------------------------------------------------------------------
+#
+# The prompt agent handles prompt-related tasks and typically runs very
+# frequently to respond to prompt updates and changes.
+#
+[agents.prompt]
+
+# How often (in minutes) the prompt agent should run automatically
+# - Default: 5
+# - Higher values reduce agent frequency (good for infrequent prompt changes)
+# - Lower values increase agent frequency (good for active prompt development)
+# - Set to 0 to disable automatic scheduling
+interval_minutes = 5
+
+# Maximum execution time for the prompt agent (in minutes)
+# - Default: 3
+# - Prevents the agent from running indefinitely
+# - Should be less than interval_minutes to avoid overlap
+# - Adjust based on typical prompt task complexity
+timeout_minutes = 3
+
+# Whether to run the prompt agent immediately on startup
+# - Default: false
+# - When true: agent runs once immediately before scheduling
+# - Useful for processing existing prompts on startup
+# - When false: agent waits for the first interval to pass
+immediate = false
+
+# Path to the prompt template file for the prompt agent
+# - Default: "prompts-prompt/PROMPT.md"
+# - Relative to the workspace path
+# - Contains the instructions and context for the prompt agent
+# - You can customize this file to change agent behavior
+prompt_template = "prompts-prompt/PROMPT.md"
+
+# Lock configuration for the prompt agent
+# Prevents multiple instances of the same agent from running concurrently
+[agents.prompt.lock]
+
+# Maximum number of retry attempts when acquiring a lock
+# - Default: 3
+# - How many times to retry if the lock is held by another process
+# - Higher values give more chances to acquire the lock in busy systems
+# - Each retry waits for the timeout_seconds duration
+max_retries = 3
+
+# Timeout (in seconds) for each lock acquisition attempt
+# - Default: 30
+# - How long to wait for the lock before retrying
+# - Should be long enough for normal operations to complete
+# - Too long may cause delays, too short may cause unnecessary retries
+timeout_seconds = 30
+
+# ----------------------------------------------------------------------------
+# Agent Configuration - Code Review
+# ----------------------------------------------------------------------------
+#
+# The code review agent performs automated codebase analysis:
+# - Identifies long files that may need refactoring
+# - Finds code duplication patterns
+# - Identifies design issues (SRP violations, panic risks, missing docs)
+# - Generates comprehensive markdown reports
+#
+[agents.code_review]
+
+# How often (in minutes) the code review agent should run automatically
+# - Default: 30
+# - Higher values reduce analysis frequency (good for stable codebases)
+# - Lower values increase analysis frequency (good for active development)
+# - Set to 0 to disable automatic scheduling
+interval_minutes = 30
+
+# Maximum execution time for the code review agent (in minutes)
+# - Default: 25
+# - Prevents the agent from running indefinitely
+# - Should be less than interval_minutes to avoid overlap
+# - Adjust based on codebase size and typical analysis duration
+timeout_minutes = 25
+
+# Whether to run the code review agent immediately on startup
+# - Default: false
+# - When true: agent runs once immediately before scheduling
+# - Useful for generating an initial code review report
+# - When false: agent waits for the first interval to pass
+immediate = false
+
+# Path to the prompt template file for the code review agent
+# - Default: "" (empty string - code review doesn't use prompt templates)
+# - Code review agent performs its own analysis without template-based prompts
+# - This field is required for config compatibility but is not used
+prompt_template = ""
+
+# Lock configuration for the code review agent
+# Prevents multiple instances of the same agent from running concurrently
+[agents.code_review.lock]
+
+# Maximum number of retry attempts when acquiring a lock
+# - Default: 3
+# - How many times to retry if the lock is held by another process
+# - Higher values give more chances to acquire the lock in busy systems
+# - Each retry waits for the timeout_seconds duration
+max_retries = 3
+
+# Timeout (in seconds) for each lock acquisition attempt
+# - Default: 30
+# - How long to wait for the lock before retrying
+# - Should be long enough for normal operations to complete
+# - Too long may cause delays, too short may cause unnecessary retries
+timeout_seconds = 30
+
+# ============================================================================
+# Customization Examples
+# ============================================================================
+#
+# Here are some common customization scenarios:
+#
+# 1. Development mode (more frequent runs, verbose logging):
+#    [logging]
+#    level = "debug"
+#
+#    [agents.architect]
+#    interval_minutes = 10
+#
+#    [agents.janitor]
+#    interval_minutes = 5
+#
+#    [agents.prompt]
+#    interval_minutes = 1
+#
+# 2. Production mode (less frequent runs, minimal logging):
+#    [logging]
+#    level = "warn"
+#    format = "json"
+#    colors = false
+#
+# 3. Immediate execution on startup (for quick setup):
+#    [agents.architect]
+#    immediate = true
+#
+#    [agents.janitor]
+#    immediate = true
+#
+#    [agents.prompt]
+#    immediate = true
+#
+# 4. Custom workspace paths:
+#    [workspace]
+#    path = "/path/to/my/project"
+#    state_path = "/path/to/my/project/.automation-state"
+#
+# 5. Higher lock timeout for busy systems:
+#    [agents.architect.lock]
+#    timeout_seconds = 60
+#
+#    [agents.janitor.lock]
+#    timeout_seconds = 60
+#
+#    [agents.prompt.lock]
+#    timeout_seconds = 60
+#
+# ============================================================================

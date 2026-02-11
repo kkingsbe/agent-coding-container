@@ -1,0 +1,36 @@
+{
+  "name": "automation-parallel",
+  "version": "1.0.0",
+  "description": "Parallel automation agents for AI-powered development",
+  "main": "run-prompt.js",
+  "author": "",
+  "license": "ISC",
+  "scripts": {
+    "start": "docker-compose up -d",
+    "stop": "docker-compose down",
+    "restart": "docker-compose restart",
+    "logs": "docker-compose logs -f",
+    "build": "docker-compose build",
+    "prompt": "node run-prompt.js --workspace /workspace --state /workspace/.state --interval 300000 --immediate",
+    "janitor": "node run-janitor.js --workspace /workspace --state /workspace/.state --interval 1200000 --immediate",
+    "architect": "node run-architect.js --workspace /workspace --state /workspace/.state --interval 2400000 --immediate",
+    "health": "docker-compose ps"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "directories": {
+    "lib": "./lib",
+    "prompts": "./prompts"
+  },
+  "files": [
+    "lib/",
+    "prompts/",
+    "prompts-prompt/",
+    "prompts-janitor/",
+    "prompts-architect/",
+    "run-*.js"
+  ]
+}

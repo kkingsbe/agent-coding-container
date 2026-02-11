@@ -1,0 +1,107 @@
+{
+  "version": "1.0.0",
+  "mode": "orchestrator",
+  "telemetry": true,
+  "provider": "default",
+  "providers": [
+    {
+      "id": "default",
+      "provider": "kilocode",
+      "kilocodeToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbnYiOiJwcm9kdWN0aW9uIiwia2lsb1VzZXJJZCI6IjEzOTVlNjA2LTgzNzUtNGIzOC04YTA1LTk4MGEzZTA1ZjliMiIsImFwaVRva2VuUGVwcGVyIjpudWxsLCJ2ZXJzaW9uIjozLCJpYXQiOjE3Njg0MTgwNzIsImV4cCI6MTkyNjIwNjA3Mn0.GFhEWuihY9ONsB59LFmOgNO117AZe5pviqqckScbdf8",
+      "kilocodeModel": "z-ai/glm-4.7",
+      "kilocodePosthogApiKey": "phc_GK2Pxl0HPj5ZPfwhLRjXrtdz8eD7e9MKnXiFrOqnB6z"
+    }
+  ],
+  "autoApproval": {
+    "enabled": true,
+    "read": {
+      "enabled": true,
+      "outside": false
+    },
+    "write": {
+      "enabled": true,
+      "outside": true,
+      "protected": false
+    },
+    "browser": {
+      "enabled": false
+    },
+    "retry": {
+      "enabled": false,
+      "delay": 10
+    },
+    "mcp": {
+      "enabled": true
+    },
+    "mode": {
+      "enabled": true
+    },
+    "subtasks": {
+      "enabled": true
+    },
+    "execute": {
+      "enabled": true,
+      "allowed": [
+        "ls",
+        "cat",
+        "echo",
+        "pwd",
+        "npx ts-node cli_tools/traffic_analysis.ts",
+        "cd /c/Users/Kyle/Documents/code/carto-art/frontend && dir *.txt *.log 2>nul | findstr /V \"tmpclaude\"",
+        "start",
+        "npx jest",
+        "npx tsc",
+        "npm run",
+        "type",
+        "cd frontend && npx tsc --noEmit",
+        "cd frontend && npm run build 2>&1 | head -100",
+        "cd frontend && npm run build",
+        "cd frontend && npm test -- apply3DModeToStyle.test.ts --no-coverage",
+        "cd frontend && grep -A 10 \"export interface VideoExportOptions\" hooks/useVideoExport.ts",
+        "cd frontend && grep -A 5 \"export interface VideoExportOptions\" hooks/useVideoExport.ts",
+        "wc -l frontend/components/layout/PosterEditor.tsx",
+        "curl -s http://localhost:3001/api/cri/conversations | python -m json.tool",
+        "curl -s http://localhost:3001/api/cri/conversations/aedc5fd9-795e-4986-b844-22bf62f554ce | python -m json.tool",
+        "curl -s -X POST http://localhost:3001/api/cri/events -H \"Content-Type: application/json\" -d \"{\\\"id\\\":\\\"test-event-001\\\",\\\"type\\\":\\\"news\\\",\\\"source\\\":\\\"newsapi_streaming_service\\\",\\\"timestamp\\\":\\\"2026-01-24T22:00:00.000Z\\\",\\\"payload\\\":{\\\"title\\\":\\\"Test Article\\\",\\\"description\\\":\\\"Test description\\\",\\\"url\\\":\\\"https://example.com\\\",\\\"author\\\":\\\"Test Author\\\",\\\"source\\\":{\\\"name\\\":\\\"Test Source\\\",\\\"id\\\":\\\"test-source\\\"},\\\"publishedAt\\\":\\\"2026-01-24T22:00:00.000Z\\\",\\\"content\\\":\\\"Test content\\\"},\\\"metadata\\\":{\\\"tags\\\":[\\\"test\\\",\\\"example\\\"],\\\"priority\\\":\\\"normal\\\"}}\" | python -m json.tool",
+        "cd backend && npm run build",
+        "cd backend && npm test -- transcript-service.spec.ts",
+        "git show",
+        "git diff",
+        "git log",
+        "cd open-task-board && npm run db:seed",
+        "curl -X POST http://localhost:5173/api/seed",
+        "cd open-task-board && npm run test:run 2>&1 | head -100",
+        "cd open-task-board && npm run test:run 2>&1 | tail -50",
+        "cd open-task-board && npm run build 2>&1 | head -100",
+        "cd open-task-board && npm test -- src/lib/server/db/queries.test.ts --run 2>&1 | grep -E \"(Test Files|Tests|Duration)\" | tail -5",
+        "cd open-task-board && npm test -- src/lib/server/db/queries.test.ts --run 2>&1 | grep \"FAIL\" | head -30",
+        "cd open-task-board && npm test",
+        "cd open-task-board && npm run test:run",
+        "cd open-task-board && npm run lint",
+        "cd open-task-board && npm run check 2>&1 | head -n 50",
+        "cd open-task-board && npx vitest run src/lib/server/db/theme-queries.test.ts",
+        "cd open-task-board && npm run build 2>&1 | grep -E \"(Build succeeded|✓ [0-9]+ modules transformed)\" | head -5",
+        "dir",
+        "npm test",
+        "git status",
+        "npx drizzle-kit migrate",
+        "sqlite3 database/taskboard.db"
+      ],
+      "denied": [
+        "rm -rf",
+        "sudo rm",
+        "mkfs",
+        "dd if="
+      ]
+    },
+    "question": {
+      "enabled": false,
+      "timeout": 60
+    },
+    "todo": {
+      "enabled": true
+    }
+  },
+  "theme": "dark",
+  "customThemes": {}
+}

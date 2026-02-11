@@ -1,0 +1,42 @@
+{
+  "test-agent-3": {
+    "agent_id": "test-agent-3",
+    "agent_type": "test",
+    "status": "stale",
+    "started_at": "2026-02-11T02:32:57.245190600Z",
+    "last_heartbeat_at": "2026-02-11T02:32:57.348793700Z",
+    "hostname": "DESKTOP-PKA527J",
+    "pid": 39504,
+    "tasks_assigned": []
+  },
+  "stale-agent-1": {
+    "agent_id": "stale-agent-1",
+    "agent_type": "test",
+    "status": "stale",
+    "started_at": "2026-02-11T03:43:03.985755200Z",
+    "last_heartbeat_at": "2026-02-11T03:43:03.985755200Z",
+    "hostname": "DESKTOP-PKA527J",
+    "pid": 44616,
+    "tasks_assigned": []
+  },
+  "test-start-stop-741fe07b-3076-473d-aff8-4e4f2b80e9d3": {
+    "agent_id": "test-start-stop-741fe07b-3076-473d-aff8-4e4f2b80e9d3",
+    "agent_type": "test",
+    "status": "stale",
+    "started_at": "2026-02-11T03:11:45.466931900Z",
+    "last_heartbeat_at": "2026-02-11T03:11:45.520441400Z",
+    "hostname": "DESKTOP-PKA527J",
+    "pid": 44424,
+    "tasks_assigned": []
+  },
+  "test-agent-1": {
+    "agent_id": "test-agent-1",
+    "agent_type": "test",
+    "status": "stale",
+    "started_at": "2026-02-11T02:31:53.316407700Z",
+    "last_heartbeat_at": "2026-02-11T02:31:53.318366Z",
+    "hostname": "DESKTOP-PKA527J",
+    "pid": 47432,
+    "tasks_assigned": []
+  }
+}

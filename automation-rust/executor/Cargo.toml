@@ -1,0 +1,21 @@
+[package]
+name = "automation-executor"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "CLI executor module for the gastown project"
+categories = ["development-tools", "command-line-utilities"]
+keywords = ["automation", "executor", "process"]
+
+[dependencies]
+automation-common = { path = "../common" }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+regex = { workspace = true }
+bytes = { workspace = true }

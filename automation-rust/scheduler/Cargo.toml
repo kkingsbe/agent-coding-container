@@ -1,0 +1,21 @@
+[package]
+name = "automation-scheduler"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Scheduler module for the gastown project"
+categories = ["development-tools", "asynchronous"]
+keywords = ["automation", "scheduler", "tokio"]
+
+[dependencies]
+automation-common = { path = "../common" }
+automation-state = { path = "../state" }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+chrono = { workspace = true }
